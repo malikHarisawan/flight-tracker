@@ -23,4 +23,15 @@ jobs:
 
             - name: Push Docker Image
               run: docker push harisshakeel161/flight-tracker:latest
-              
+
+            - name: Deploy to EC2
+              run: |
+                    echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
+                    chmod 600 private_key.pem
+                    ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+                      docker pull harisshakeel161/flight-tracker:latest
+                      docker stop flight-tracker-app || true
+                      docker rm flight-tracker-app || true
+                      docker run -d -p 3000:3000 --name flight-tracker-app harisshakeel161/flight-tracker:latest
+                    EOF
+                        
